@@ -1,5 +1,6 @@
 package repository;
 
+import lombok.RequiredArgsConstructor;
 import model.Currency;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -14,14 +15,11 @@ import java.sql.Statement;
 import java.util.List;
 
 @Repository
+@RequiredArgsConstructor
 public class CurrencyRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public CurrencyRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public List<Currency> findAll(){
         return jdbcTemplate.query(CurrencyQueries.FIND_ALL_SQL, new BeanPropertyRowMapper<>(Currency.class));

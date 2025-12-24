@@ -1,5 +1,6 @@
 package repository;
 
+import lombok.RequiredArgsConstructor;
 import model.Currency;
 import model.ExchangeRate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +15,11 @@ import java.sql.Statement;
 import java.util.List;
 
 @Repository
+@RequiredArgsConstructor
 public class ExchangeRateRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-
-    @Autowired
-    public ExchangeRateRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public List<ExchangeRate> findAll(){
 

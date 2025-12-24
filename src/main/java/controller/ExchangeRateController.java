@@ -2,7 +2,11 @@ package controller;
 
 import dto.ExchangeRateConversionResponse;
 import dto.ExchangeRateResponse;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,27 +18,26 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/exchange-rates")
+@RequiredArgsConstructor
 public class ExchangeRateController {
+    private static final Logger logger = LoggerFactory.getLogger(ExchangeRateController.class);
     private final ExchangeRateService exchangeRateService;
 
-    @Autowired
-    public ExchangeRateController(ExchangeRateService exchangeRateService) {
-        this.exchangeRateService = exchangeRateService;
-    }
 
     @GetMapping
     public ResponseEntity<List<ExchangeRateResponse>> getAllExchangeRates(){
+        logger.info("GET /exchange-rates - get all exchange-rates");
         List<ExchangeRateResponse> exchangeRates = exchangeRateService.findAll();
+        logger.debug("Founded {} exchange rates", exchangeRates.size());
+
         return ResponseEntity.ok(exchangeRates);
     }
 
     @GetMapping("/pair")
     public ResponseEntity<ExchangeRateResponse> getExchangeRateByCode(@RequestParam String baseCurrency, @RequestParam String targetCurrency){
-        validateCurrencyCode(baseCurrency);
-        validateCurrencyCode(targetCurrency);
-
+        logger.info("GET /pair - get exchange rate for a  pair of codes");
         ExchangeRateResponse exchangeRateResponse = exchangeRateService.findByCode(baseCurrency.toUpperCase(), targetCurrency.toUpperCase());
-
+        logger.debug("Founded exchange rate:{}", exchangeRateResponse.getRate());
         return ResponseEntity.ok(exchangeRateResponse);
     }
 
@@ -44,32 +47,11 @@ public class ExchangeRateController {
             @RequestParam String to,
             @RequestParam Double amount
     ) {
-        validateCurrencyCode(from);
-        validateCurrencyCode(to);
+        logger.info("GET /convert - get convert entity");
+        ExchangeRateConversionResponse exchangeRateResponse = exchangeRateService.calculateExchange(from, to, amount);
+        logger.debug("Got convert entity");
 
-        if (amount <= 0) {
-            throw  new IllegalArgumentException("The amount must by a positive number");
-        }
-
-        Double convertedAmount = exchangeRateService.calculateExchange(from, to, amount);
-
-        ExchangeRateConversionResponse response = new ExchangeRateConversionResponse(
-                from.toUpperCase(),
-                to.toUpperCase(),
-                amount,
-                convertedAmount
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(exchangeRateResponse);
     }
 
-
-    private void validateCurrencyCode(String currencyCode) {
-        if (currencyCode == null || currencyCode.length() !=3){
-            throw new IllegalArgumentException("The currency code must be 3 characters long");
-        }
-        if (!currencyCode.matches("[A-Za-z]{3}")) {
-            throw new IllegalArgumentException("The currency code must contain only 3 letters");
-        }
-    }
 }
